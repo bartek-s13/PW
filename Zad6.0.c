@@ -13,8 +13,8 @@
 int main(){
     char name1[] = "myfifo1", name2[] = "myfifo2";
     int fd,fd1;
-    unlink(name1);
-    unlink(name2);
+    //unlink(name1); ?
+    //unlink(name2); ?
     if (mkfifo(name1, S_IRUSR | S_IWUSR) == -1) //jak plik, czyli dawa razy nie możemy utworzyć dwa razy
     {
         perror("fifo create error");
