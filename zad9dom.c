@@ -13,13 +13,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
-/*
-struct sembuf {
-short sem_num;
-short sem_op;
-short sem_flg;
-};
-*/
+
 static struct sembuf buf;
 
 void podnies (int semid, int semnum) {
@@ -45,16 +39,21 @@ void opusc(int semid, int semnum) {
 void filozof(int nr, int a){
     while(1){
         int c,d; //widelce
+        c = nr;
+        if(nr == 1)
+          d = 5;
+        else
+          d = nr - 1;
             podnies(a, c);
-            printf("%d bierze widelec %d")
+            printf("%d bierze widelec %d", nr, c);
             podnies(a, d);
-            printf("%d bierze widelec %d")
-            printf("%d je")
+            printf("%d bierze widelec %d", nr, d);
+            printf("%d je", nr);
             sleep(2);
             opusc(a, c);
-            printf("%d odkłada widelec %d")
+            printf("%d odkłada widelec %d", nr, c);
             opusc(a, d);
-            printf("%d odkłada widelec %d")
+            printf("%d odkłada widelec %d", nr, d);
 }
     
 }
@@ -62,13 +61,11 @@ void filozof(int nr, int a){
 
 int main()
 {
-    char *buffer;
-    int shmid;
     int a = semget(0x777, 5, IPC_CREAT| 0660);
-    for(int = 0; i<5; i++)
-        semctl(a, i, SETVAL, 1);
-for(int i = 0; i<5; i++){
-     if(fork == 0){
+    for(int j = 0; j<5; j++)
+        semctl(a, j, SETVAL, 1);
+for(int i = 1; i<=5; i++){
+     if(fork() == 0){
         filozof(i, a);
     }
     
