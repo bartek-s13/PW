@@ -15,6 +15,15 @@
 #include <sys/sem.h>
 
 static struct sembuf buf;
+int a;
+
+void koniecimprezy() {
+    if (semctl(a, 0, IPC_RMID, NULL) == -1) {
+        perror("cannot remove semaphore");
+        exit(1);
+    }
+    exit(0);
+}
 
 void podnies (int semid, int semnum) {
     buf.sem_num = semnum;
@@ -36,44 +45,46 @@ void opusc(int semid, int semnum) {
     }
 }
 
-void filozof(int nr, int a){
-    while(1){
-        int c,d; //widelce
-        c = nr;
-        if(nr == 1)
-          d = 5;
+void filozof(int nr){    
+        int l,r; //widelce
+        r = nr;
+        if(nr == 0)
+          l = 4;
         else
-          d = nr - 1;
-            podnies(a, c);
-            printf("%d bierze widelec %d", nr, c);
-            podnies(a, d);
-            printf("%d bierze widelec %d", nr, d);
-            printf("%d je", nr);
-            sleep(2);
-            opusc(a, c);
-            printf("%d odkłada widelec %d", nr, c);
-            opusc(a, d);
-            printf("%d odkłada widelec %d", nr, d);
-}
-    
+          l = nr - 1;
+	while(1){
+            opusc(a, r);
+            printf("%d bierze widelec prawy(%d)\n", nr + 1, r + 1);
+            opusc(a, l);
+            printf("%d bierze widelec lewy (%d)\n", nr + 1, l + 1);
+            printf("%d je\n", nr + 1);
+            sleep(2);            
+            podnies(a, l);
+            printf("%d odkłada widelec lewy(%d)\n", nr + 1, l + 1);
+            podnies(a, r);
+            printf("%d odkłada widelec prawy (%d)\n", nr + 1, r + 1);
+	}
+   
 }
 
 
 int main()
 {
-    int a = semget(0x777, 5, IPC_CREAT| 0660);
+    if ((a = semget(0x123, 5, IPC_CREAT | 0777)) == -1){
+        perror("Cannot get semaphore");
+        exit(1);
+    }
     for(int j = 0; j<5; j++)
         semctl(a, j, SETVAL, 1);
-for(int i = 1; i<=5; i++){
-     if(fork() == 0){
-        filozof(i, a);
-    }
+    for(int i = 0; i<5; i++){ 
+	if(fork() == 0){
+	filozof(i);
+	}
+    }   
+        
     
-}    
+signal(SIGINT, koniecimprezy);
+    while(1);
    
-return 0;    
-    
-    
-
-    
+    return 0; 
 }
