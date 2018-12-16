@@ -15,50 +15,72 @@
 #include <sys/sem.h>
 #include <sys/msg.h>
 
+#define M_DANE 997
+#define M_END 998
+#define M_WYNIK 999
 
 int n;
 struct msgbuf {
 long mtype;
-char mtext[1024];
+int mnumber;
 };
-
-void koniec() {
-    if (msgctl(n, IPC_RMID, NULL) == -1) {
-        perror("Uduwanie kolejki");
-        exit(1);
-    }
-    exit(0);
-}
-
 
 int main()
 {
-    struct msgbuf q;
-    q.mtype = 10;
-    strcpy(q.mtext, "Hello!\n");
-    int a, b;
     if((n = msgget(17, IPC_CREAT | 0600)) == -1){
         perror("tworzenie kolejki");
         exit(1);
     }
-    
-    if(fork() == 0){
-        if((a = msgsnd(n, &q, 1024,0)) == -1){
-            perror("Przesyłanie");
-            exit(1);
-        }        
-    }
-    
-    if(fork() == 0){
-        struct msgbuf rec;
-        if((b = msgrcv(n, &rec, 1024, 0, 0)) == -1){
+    int a, b;
+  
+    if(fork() == 0){   
+        struct msgbuf q;
+        while(1){
+        do{
+            printf("Podaj liczbę: \n");        
+            scanf("%d", &q.mnumber);
+            if(q.mnumber != 0)
+                q.mtype = M_DANE;
+            else
+                q.mtype = M_END;
+            if((a = msgsnd(n, &q, sizeof(int),0)) == -1){
+                perror("Przesyłanie");
+                exit(1);
+            }         
+        }while(q.mnumber != 0);
+        q.mnumber++;
+        if((a = msgrcv(n, &q, sizeof(int), 999, 0)) == -1){
             perror("Odbieranie");
             exit(1);
         }  
-        printf("%s", rec.mtext);
+        printf("Otrzymany wynik to: %d \n", q.mnumber);          
+        }
+    }    
+    
+    if(fork() == 0){
+        struct msgbuf rec;
+        int sum = 0;
+        while(1){
+            if((b = msgrcv(n, &rec, sizeof(int), 0, 0)) == -1){
+                perror("Odbieranie");
+                exit(1);
+            }    
+            if(rec.mtype == M_DANE)
+                sum += rec.mnumber;
+            else if(rec.mtype == M_END){
+                rec.mtype = M_WYNIK;
+                rec.mnumber = sum;
+            if((a = msgsnd(n, &rec, sizeof(int),0)) == -1){
+                perror("Przesyłanie");
+                exit(1);
+            }    
+            sum = 0;          
+            }       
+        }
     }
     
-signal(SIGINT, koniec);
 
-    return 0; 
+  wait(NULL);
+  wait(NULL);
+  return 0; 
 }
