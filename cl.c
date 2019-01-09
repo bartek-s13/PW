@@ -44,14 +44,15 @@ int main(int argc, char const *argv[])
     }
         
  if (fork() == 0){
-     if (msgrcv(id, &received, MSG_SIZE, ANSWER, 0) == -1) {
+     while(1){
+        if (msgrcv(id, &received, MSG_SIZE, ANSWER, 0) == -1) {
         perror("cannot receive answer message");
         exit(1);
     }     
-   split2(received.tresc, words2);
+    split2(received.tresc, words2);
    
-   printf("%d: %s", received.id_nadawcy, words2[3]);
-   
+    printf("%d: %s", received.id_nadawcy, words2[3]);
+    } 
  } 
   
   while(1){
